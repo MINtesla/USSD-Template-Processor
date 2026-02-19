@@ -1,0 +1,65 @@
+<xsl:stylesheet version="1.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                xmlns:wos="http://www.huawei.com/bme/cbsinterface/woservices"
+                xmlns:cbs="http://www.huawei.com/bme/cbsinterface/cbscommon"
+                exclude-result-prefixes="soapenv wos cbs">
+
+    <xsl:output method="text" encoding="UTF-8"/>
+
+    <!-- key indexes both nested Param and flat OrderParam by their Code text -->
+    <xsl:key name="codeNodes"
+             match="wos:Param | wos:OrderParam"
+             use="normalize-space(*[local-name()='Code'])" />
+
+    <xsl:template match="/soapenv:Envelope/soapenv:Body/wos:WorkOrderRequestMsg">
+        <xsl:text>{</xsl:text>
+
+        <!-- Select candidate Param / OrderParam -->
+        <xsl:variable name="candidates"
+                      select="*[local-name()='WorkOrderRequest']//*[local-name()='Param']
+            | *[local-name()='WorkOrderRequest']/*[local-name()='OrderParam'
+                and not(*[local-name()='ObjParam'])]"/>
+
+        <!-- Loop unique Codes -->
+        <xsl:for-each select="
+        $candidates
+        [generate-id() = generate-id(
+            key('codeNodes', normalize-space(*[local-name()='Code']))[1]
+        )]
+      ">
+
+            <!-- Extract code -->
+            <xsl:variable name="code"
+                          select="normalize-space(*[local-name()='Code'])"/>
+
+            <!-- Uppercase version -->
+            <xsl:variable name="upperCode"
+                          select="translate($code,
+                          'abcdefghijklmnopqrstuvwxyz',
+                          'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>
+
+            <!-- JSON key -->
+            <xsl:text>"</xsl:text>
+            <xsl:choose>
+                <xsl:when test="$upperCode = 'SUBSCRIBERNO'">
+                    <xsl:text>MSISDN</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$upperCode"/>
+                </xsl:otherwise>
+            </xsl:choose>
+            <xsl:text>":"</xsl:text>
+
+            <!-- JSON value -->
+            <xsl:value-of select="normalize-space(*[local-name()='Value'])"/>
+            <xsl:text>"</xsl:text>
+
+        </xsl:for-each>
+
+        <xsl:text>}</xsl:text>
+    </xsl:template>
+
+    <!-- ignore stray text nodes -->
+    <xsl:template match="text()"/>
+</xsl:stylesheet>
