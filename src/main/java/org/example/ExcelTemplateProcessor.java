@@ -1,5 +1,6 @@
 package org.example;
 
+import com.emagine.Crypt;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -50,8 +51,11 @@ public class ExcelTemplateProcessor {
 }
 """;
 
+    public static void main(String[] args){
+        System.out.println(Crypt.decrypt("mobilytixmrtmkey","PZgI0EM5K8+9jmyXqQox6w=="));
+    }
 
-    public static void main(String[] args) throws Exception {
+    public static void main1(String[] args) throws Exception {
 
         String filePath = "C:\\Users\\ashutosh.singh4\\OneDrive - Comviva Technologies Ltd\\Documents\\vdrc\\J4U_USSD.xlsx";
 
